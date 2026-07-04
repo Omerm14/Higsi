@@ -77,17 +77,6 @@ export const MODEL_OPTIONS: ModelOption[] = [
     tier: "cheap",
     defaults: { aspectRatio: "1:1" },
   },
-  {
-    id: "gpt-image",
-    label: "GPT Image",
-    mode: "t2i",
-    model: "gpt-image",
-    taskType: "text-to-image",
-    costUnit: "per_image",
-    rateUsd: 0.04,
-    tier: "full",
-    defaults: { aspectRatio: "1:1" },
-  },
 ];
 
 export function getModelOption(id: string): ModelOption | undefined {
