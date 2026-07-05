@@ -44,6 +44,13 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
           <path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zM21 16a3 3 0 11-6 0 3 3 0 016 0z" />
         ),
       },
+      {
+        href: "/create/3d",
+        label: "3D",
+        icon: (
+          <path d="M12 2l8.5 5v10L12 22l-8.5-5V7L12 2zM12 2v20M3.5 7l8.5 5 8.5-5" strokeLinejoin="round" />
+        ),
+      },
     ],
   },
   {

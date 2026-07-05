@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getGeneration, updateGenerationStatus } from "@/lib/db";
 import { persistOutputToBlob } from "@/lib/blob";
 import { PiApiProvider } from "@/lib/providers/piapi";
+import { getModelOption } from "@/lib/models";
 
 export async function GET(
   _req: Request,
@@ -17,8 +18,11 @@ export async function GET(
     return NextResponse.json(generation);
   }
 
+  const modelId = (generation.params as { modelId?: string } | null)?.modelId;
+  const outputKind = modelId ? getModelOption(modelId)?.outputKind : undefined;
+
   const provider = new PiApiProvider();
-  const result = await provider.getTask(generation.piapi_task_id);
+  const result = await provider.getTask(generation.piapi_task_id, outputKind);
 
   if (result.status === "completed" && result.outputUrl) {
     const mediaUrl = await persistOutputToBlob(result.outputUrl, generation.id);

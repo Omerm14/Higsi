@@ -176,6 +176,32 @@ export const MODEL_OPTIONS: ModelOption[] = [
     ],
   },
   {
+    // Verified via live spike (2026-07-05): request accepted cleanly with a
+    // real image URL, frozen points assigned. $0.10/generation per PiAPI's
+    // docs. Note: PiAPI's echoed input moves our "image" value into an
+    // internal "images" array field — send "image" as a plain string, that's
+    // what the accepted request actually used.
+    id: "trellis",
+    label: "Trellis (image to 3D)",
+    category: "3d",
+    model: "Qubico/trellis",
+    taskType: "image-to-3d",
+    costUnit: "per_output",
+    rateUsd: 0.1,
+    tier: "cheap",
+    outputKind: "3d",
+    fields: [
+      {
+        key: "image",
+        wireKey: "image",
+        type: "image",
+        label: "Source image",
+        role: "source",
+        required: true,
+      },
+    ],
+  },
+  {
     // Verified via live spike (2026-07-05): a real 10s .mp3 completed in
     // ~24s. $0.0005/sec per PiAPI's docs — extremely cheap.
     id: "ace-step",

@@ -69,7 +69,7 @@ async function main() {
 
   for (let i = 0; i < 60; i++) {
     await sleep(5000);
-    const result = await provider.getTask(taskId);
+    const result = await provider.getTask(taskId, option.outputKind);
     console.log(`[${i}] status:`, result.status);
     if (result.status === "completed") {
       console.log("output url:", result.outputUrl);
