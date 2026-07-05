@@ -1,13 +1,12 @@
-// Model / task_type strings verified against the live PiAPI create-task
-// endpoint during the Phase 0 spike (2026-07-04). PiAPI ships new models
-// constantly — re-verify against https://piapi.ai/docs if a call starts
-// returning "invalid model"/"invalid task type".
+// Model / task_type strings and rates per PiAPI's unified create-task API.
+// PiAPI ships new models constantly — re-verify these against live docs
+// (https://piapi.ai/docs) before relying on them for anything but personal use.
 //
 // Cost note: PiAPI bills in an internal "point" unit (see the `usage` field
 // on a task response), not a flat $/call rate. rateUsd below is a rough
-// estimate carried over from the build brief, not reconciled against actual
-// point pricing — treat the pre-submit cost estimate as directional only
-// until it's checked against real spend on the PiAPI dashboard.
+// estimate, not reconciled against actual point pricing — treat the
+// pre-submit cost estimate as directional only until checked against real
+// spend on the PiAPI dashboard.
 
 export type Mode = "t2v" | "i2v" | "t2i";
 
@@ -77,6 +76,17 @@ export const MODEL_OPTIONS: ModelOption[] = [
     rateUsd: 0.5,
     tier: "full",
     defaults: { duration: 5, aspectRatio: "16:9" },
+  },
+  {
+    id: "nano-banana",
+    label: "Nano Banana 2 (cheap image)",
+    mode: "t2i",
+    model: "gemini",
+    taskType: "nano-banana-2",
+    costUnit: "per_image",
+    rateUsd: 0.06,
+    tier: "cheap",
+    defaults: { aspectRatio: "1:1" },
   },
   {
     id: "flux-schnell",

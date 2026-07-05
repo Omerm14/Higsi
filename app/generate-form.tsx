@@ -20,6 +20,8 @@ const MODE_LABEL: Record<Mode, string> = {
   t2i: "Text → Image",
 };
 
+const ASPECT_RATIOS = ["16:9", "9:16", "1:1"];
+
 export default function GenerateForm() {
   const [mode, setMode] = useState<Mode>("t2v");
   const modelsForMode = useMemo(
@@ -66,14 +68,33 @@ export default function GenerateForm() {
 
   function pollJob(id: string) {
     const interval = setInterval(async () => {
-      const res = await fetch(`/api/jobs/${id}`);
-      const json = await res.json();
-      if (!res.ok) {
+      let res: Response;
+      let json: unknown;
+      try {
+        res = await fetch(`/api/jobs/${id}`);
+        json = await res.json();
+      } catch {
         clearInterval(interval);
+        setJobs((prev) =>
+          prev.map((j) =>
+            j.id === id ? { ...j, status: "failed", error: "Lost connection while checking job status" } : j
+          )
+        );
         return;
       }
-      setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, ...json } : j)));
-      if (json.status === "completed" || json.status === "failed") {
+      if (!res.ok) {
+        clearInterval(interval);
+        const message =
+          (json && typeof json === "object" && "error" in json && typeof json.error === "string"
+            ? json.error
+            : null) ?? `Job status check failed (${res.status})`;
+        setJobs((prev) =>
+          prev.map((j) => (j.id === id ? { ...j, status: "failed", error: message } : j))
+        );
+        return;
+      }
+      setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, ...(json as Job) } : j)));
+      if ((json as Job).status === "completed" || (json as Job).status === "failed") {
         clearInterval(interval);
       }
     }, 4000);
@@ -108,143 +129,148 @@ export default function GenerateForm() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-8 lg:flex-row">
-      <aside className="w-full shrink-0 rounded-xl border border-border bg-surface p-5 lg:w-72">
-        <h2 className="mb-4 text-sm font-medium text-muted">Model & params</h2>
-
-        <div className="mb-4 flex flex-col gap-1">
-          <label className="text-xs text-muted">Mode</label>
-          <div className="flex flex-col gap-1">
-            {(Object.keys(MODE_LABEL) as Mode[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => onModeChange(m)}
-                className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
-                  mode === m
-                    ? "border-accent bg-surface-2 text-foreground"
-                    : "border-border text-muted hover:text-foreground"
-                }`}
-              >
-                {MODE_LABEL[m]}
-              </button>
-            ))}
-          </div>
+    <div className="flex h-full flex-1 flex-col">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-4">
+        <div className="glass flex rounded-full p-1">
+          {(Object.keys(MODE_LABEL) as Mode[]).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => onModeChange(m)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                mode === m
+                  ? "btn-gradient text-accent-foreground"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              {MODE_LABEL[m]}
+            </button>
+          ))}
         </div>
 
-        <div className="mb-4 flex flex-col gap-1">
-          <label className="text-xs text-muted">Model</label>
-          <select
-            value={modelId}
-            onChange={(e) => setModelId(e.target.value)}
-            className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
-          >
-            {modelsForMode.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.label}
-              </option>
-            ))}
-          </select>
+        <select
+          value={modelId}
+          onChange={(e) => setModelId(e.target.value)}
+          className="glass rounded-full px-4 py-2 text-sm outline-none"
+        >
+          {modelsForMode.map((m) => (
+            <option key={m.id} value={m.id} className="bg-[#111114]">
+              {m.label}
+            </option>
+          ))}
+        </select>
+
+        <div className="glass flex rounded-full p-1">
+          {ASPECT_RATIOS.map((ar) => (
+            <button
+              key={ar}
+              type="button"
+              onClick={() => setAspectRatio(ar)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                aspectRatio === ar
+                  ? "bg-surface-2 text-foreground"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              {ar}
+            </button>
+          ))}
         </div>
 
         {activeOption?.costUnit === "per_second" && (
-          <div className="mb-4 flex flex-col gap-1">
-            <label className="text-xs text-muted">Duration (seconds)</label>
+          <label className="glass flex items-center gap-2 rounded-full px-4 py-2 text-xs text-muted">
+            Duration
             <input
               type="number"
               min={1}
               max={30}
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value))}
-              className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
+              className="tabular w-10 bg-transparent text-center text-foreground outline-none"
             />
-          </div>
+            s
+          </label>
         )}
-
-        <div className="mb-4 flex flex-col gap-1">
-          <label className="text-xs text-muted">Aspect ratio</label>
-          <select
-            value={aspectRatio}
-            onChange={(e) => setAspectRatio(e.target.value)}
-            className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
-          >
-            <option value="16:9">16:9</option>
-            <option value="9:16">9:16</option>
-            <option value="1:1">1:1</option>
-          </select>
-        </div>
 
         {mode === "i2v" && (
-          <div className="mb-4 flex flex-col gap-1">
-            <label className="text-xs text-muted">Reference image</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={onUpload}
-              disabled={uploading}
-              className="text-xs text-muted"
-            />
-            {uploading && <span className="text-xs text-muted">Uploading…</span>}
-            {imageUrl && !uploading && (
-              <span className="truncate text-xs text-success">Uploaded ✓</span>
-            )}
-          </div>
+          <label className="glass flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-xs text-muted hover:text-foreground">
+            {uploading ? "Uploading…" : imageUrl ? "Image ✓" : "Upload image"}
+            <input type="file" accept="image/*" onChange={onUpload} disabled={uploading} className="hidden" />
+          </label>
         )}
 
-        <div className="mt-6 rounded-lg border border-border bg-surface-2 p-3">
-          <div className="text-xs text-muted">Estimated cost</div>
-          <div className="tabular text-lg font-medium">${estCost.toFixed(2)}</div>
-          <div className="mt-1 text-xs text-muted">
-            {activeOption?.tier === "full" ? "Full-quality tier" : "Cheap tier (default)"}
-          </div>
+        <div className="ml-auto glass rounded-full px-4 py-2 text-xs text-muted">
+          Est. cost <span className="tabular font-medium text-foreground">${estCost.toFixed(2)}</span>
         </div>
-      </aside>
+      </div>
 
-      <section className="flex flex-1 flex-col gap-4">
-        <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      {/* Results */}
+      <div className="scrollbar-thin flex-1 overflow-y-auto px-6 py-6">
+        {jobs.length === 0 ? (
+          <div className="flex h-full min-h-[300px] flex-col items-center justify-center gap-2 text-center text-muted">
+            <p className="text-sm">Nothing generated yet</p>
+            <p className="text-xs text-muted-2">Describe what you want below and hit generate.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {jobs.map((job) => (
+              <div
+                key={job.id}
+                className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-surface"
+              >
+                {job.media_url ? (
+                  job.mode === "t2i" ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={`/api/media/${job.id}`} alt={job.prompt} className="h-full w-full object-cover" />
+                  ) : (
+                    <video src={`/api/media/${job.id}`} controls className="h-full w-full object-cover" />
+                  )
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center gap-2 text-xs text-muted">
+                    {job.status === "failed" ? (
+                      <span className="text-danger">Failed</span>
+                    ) : (
+                      <>
+                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-accent" />
+                        Generating…
+                      </>
+                    )}
+                  </div>
+                )}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">
+                  <p className="line-clamp-2 text-xs text-white">{job.prompt}</p>
+                  {job.error && <p className="text-xs text-danger">{job.error}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Composer */}
+      <div className="border-t border-border px-6 py-4">
+        <form
+          onSubmit={onSubmit}
+          className="glass gradient-ring mx-auto flex max-w-3xl items-end gap-3 rounded-3xl p-3"
+        >
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Describe what you want to generate…"
-            rows={5}
-            className="rounded-xl border border-border bg-surface p-4 text-sm outline-none focus:border-accent"
+            rows={1}
+            className="max-h-40 flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none placeholder:text-muted-2"
           />
-          {errorMsg && <p className="text-sm text-danger">{errorMsg}</p>}
           <button
             type="submit"
             disabled={submitting || !prompt.trim() || (mode === "i2v" && !imageUrl)}
-            className="self-start rounded-lg bg-accent px-5 py-2 text-sm font-medium text-accent-foreground disabled:opacity-50"
+            className="btn-gradient shrink-0 rounded-full px-5 py-2.5 text-sm font-medium text-accent-foreground disabled:cursor-not-allowed disabled:opacity-40"
           >
             {submitting ? "Submitting…" : "Generate"}
           </button>
         </form>
-
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {jobs.map((job) => (
-            <div
-              key={job.id}
-              className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-3"
-            >
-              <div className="aspect-square overflow-hidden rounded-lg bg-surface-2">
-                {job.media_url ? (
-                  job.mode === "t2i" ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={job.media_url} alt={job.prompt} className="h-full w-full object-cover" />
-                  ) : (
-                    <video src={job.media_url} controls className="h-full w-full object-cover" />
-                  )
-                ) : (
-                  <div className="flex h-full items-center justify-center text-xs text-muted">
-                    {job.status === "failed" ? "Failed" : "Generating…"}
-                  </div>
-                )}
-              </div>
-              <p className="line-clamp-2 text-xs text-muted">{job.prompt}</p>
-              {job.error && <p className="text-xs text-danger">{job.error}</p>}
-            </div>
-          ))}
-        </div>
-      </section>
+        {errorMsg && <p className="mx-auto mt-2 max-w-3xl text-sm text-danger">{errorMsg}</p>}
+      </div>
     </div>
   );
 }
