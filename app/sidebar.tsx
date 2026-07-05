@@ -27,6 +27,16 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
           </>
         ),
       },
+      {
+        href: "/create/video",
+        label: "Video",
+        icon: (
+          <>
+            <rect x="2.5" y="6" width="14" height="12" rx="2" />
+            <path d="M16.5 10l5-3v10l-5-3" strokeLinejoin="round" />
+          </>
+        ),
+      },
     ],
   },
   {

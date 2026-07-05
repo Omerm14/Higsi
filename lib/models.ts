@@ -39,6 +39,7 @@ export interface ModelField {
   max?: number;
   step?: number;
   accept?: string; // for "image" fields, e.g. "image/*"
+  arrayWrap?: boolean; // wrap the single value in a 1-element array on the wire (e.g. Seedance's image_urls)
 }
 
 export interface ModelOption {
@@ -86,18 +87,20 @@ const DURATION_FIELD: ModelField = {
   max: 30,
 };
 
-// NOTE: the reference-image input field name for Seedance i2v is not yet
-// confirmed — probing "image", "images", "image_url", "first_frame_image"
-// during the spike all left PiAPI's mode auto-detection at images=0 (i.e. it
-// still ran as text-to-video). Check PiAPI's Seedance docs for the correct
-// field before relying on this option.
+// Resolved via live spike (2026-07-05): the field is the plural `image_urls`
+// (a 1-2 element array), not `image_url`/`image`/`first_frame_image` as
+// earlier probes assumed. PiAPI auto-detects image-to-video mode from its
+// presence — no explicit "mode": "first_last_frames" needed. Confirmed by a
+// real completed generation whose logs show "aspect ratio resolved to 1:1
+// from first image", i.e. the image genuinely drove the output.
 const SEEDANCE_IMAGE_FIELD: ModelField = {
   key: "imageUrl",
-  wireKey: "image_url",
+  wireKey: "image_urls",
   type: "image",
   label: "Reference image",
   role: "source",
   required: true,
+  arrayWrap: true,
 };
 
 export const MODEL_OPTIONS: ModelOption[] = [
@@ -213,7 +216,7 @@ export function buildPiApiInput(
   for (const field of option.fields) {
     const value = values[field.key] ?? field.default;
     if (value === undefined || value === null || value === "") continue;
-    input[field.wireKey] = value;
+    input[field.wireKey] = field.arrayWrap ? [value] : value;
   }
   return input;
 }
