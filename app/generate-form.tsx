@@ -68,14 +68,33 @@ export default function GenerateForm() {
 
   function pollJob(id: string) {
     const interval = setInterval(async () => {
-      const res = await fetch(`/api/jobs/${id}`);
-      const json = await res.json();
-      if (!res.ok) {
+      let res: Response;
+      let json: unknown;
+      try {
+        res = await fetch(`/api/jobs/${id}`);
+        json = await res.json();
+      } catch {
         clearInterval(interval);
+        setJobs((prev) =>
+          prev.map((j) =>
+            j.id === id ? { ...j, status: "failed", error: "Lost connection while checking job status" } : j
+          )
+        );
         return;
       }
-      setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, ...json } : j)));
-      if (json.status === "completed" || json.status === "failed") {
+      if (!res.ok) {
+        clearInterval(interval);
+        const message =
+          (json && typeof json === "object" && "error" in json && typeof json.error === "string"
+            ? json.error
+            : null) ?? `Job status check failed (${res.status})`;
+        setJobs((prev) =>
+          prev.map((j) => (j.id === id ? { ...j, status: "failed", error: message } : j))
+        );
+        return;
+      }
+      setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, ...(json as Job) } : j)));
+      if ((json as Job).status === "completed" || (json as Job).status === "failed") {
         clearInterval(interval);
       }
     }, 4000);
