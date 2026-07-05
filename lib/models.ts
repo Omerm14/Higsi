@@ -153,6 +153,29 @@ export const MODEL_OPTIONS: ModelOption[] = [
     fields: [PROMPT_FIELD, ASPECT_RATIO_FIELD, DURATION_FIELD, SEEDANCE_IMAGE_FIELD],
   },
   {
+    // Verified via live spike (2026-07-05): a real ~85-frame 480p clip
+    // completed in ~8 minutes. Flat $0.28/generation per PiAPI's docs
+    // (not per-second — Wanx's output length isn't user-configurable).
+    id: "wanx",
+    label: "Wanx (cheap, longer clip)",
+    category: "video",
+    model: "Qubico/wanx",
+    taskType: "txt2video-14b",
+    costUnit: "per_output",
+    rateUsd: 0.28,
+    tier: "cheap",
+    outputKind: "video",
+    fields: [
+      PROMPT_FIELD,
+      {
+        key: "negativePrompt",
+        wireKey: "negative_prompt",
+        type: "negative_prompt",
+        label: "Avoid",
+      },
+    ],
+  },
+  {
     id: "nano-banana",
     label: "Nano Banana 2 (cheap image)",
     category: "image",
