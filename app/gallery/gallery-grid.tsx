@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { Generation } from "@/lib/db";
-import { getModelOption, type Category } from "@/lib/models";
+import { getModelOption } from "@/lib/models";
 import { MediaTile, type OutputKind } from "../studio-results";
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -14,20 +14,11 @@ const CATEGORY_LABEL: Record<string, string> = {
   tool: "Tools",
 };
 
-// Rows written before the category migration (see db/MIGRATION.md) still
-// carry legacy t2v/i2v/t2i values in the same column — normalize them so
-// filtering/rendering works uniformly regardless of when a row was written.
-function resolveCategory(g: Generation): Category {
-  if (g.mode === "t2i") return "image";
-  if (g.mode === "t2v" || g.mode === "i2v") return "video";
-  return g.mode as Category;
-}
-
 function resolveOutputKind(g: Generation): OutputKind {
   const modelId = (g.params as { modelId?: string } | null)?.modelId;
   const option = modelId ? getModelOption(modelId) : undefined;
   if (option) return option.outputKind;
-  return resolveCategory(g) === "image" ? "image" : "video";
+  return g.category === "image" ? "image" : "video";
 }
 
 export default function GalleryGrid({ generations }: { generations: Generation[] }) {
@@ -40,7 +31,7 @@ export default function GalleryGrid({ generations }: { generations: Generation[]
   );
 
   const filtered = generations.filter((g) => {
-    if (categoryFilter !== "all" && resolveCategory(g) !== categoryFilter) return false;
+    if (categoryFilter !== "all" && g.category !== categoryFilter) return false;
     if (modelFilter !== "all" && g.model !== modelFilter) return false;
     return true;
   });

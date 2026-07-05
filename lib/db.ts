@@ -12,10 +12,7 @@ export interface Generation {
   id: string;
   model: string;
   task_type: string;
-  // Underlying SQL column is still named "mode" pending the migration in
-  // db/schema.sql (see MIGRATION.md). New rows store Category values; rows
-  // written before the migration may still carry legacy t2v/i2v/t2i values.
-  mode: Category | "t2v" | "i2v" | "t2i";
+  category: Category;
   prompt: string;
   params: Record<string, unknown>;
   status: TaskStatus;
@@ -40,7 +37,7 @@ export async function insertGeneration(input: {
   const db = sql();
   const rows = (await db`
     insert into generations
-      (model, task_type, mode, prompt, params, piapi_task_id, est_cost_usd, status)
+      (model, task_type, category, prompt, params, piapi_task_id, est_cost_usd, status)
     values
       (${input.model}, ${input.taskType}, ${input.category}, ${input.prompt},
        ${JSON.stringify(input.params)}, ${input.piapiTaskId}, ${input.estCostUsd}, 'pending')
