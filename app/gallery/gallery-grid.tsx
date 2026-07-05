@@ -2,16 +2,36 @@
 
 import { useMemo, useState } from "react";
 import type { Generation } from "@/lib/db";
+import { getModelOption, type Category } from "@/lib/models";
+import { MediaTile, type OutputKind } from "../studio-results";
 
-const MODE_LABEL: Record<string, string> = {
+const CATEGORY_LABEL: Record<string, string> = {
   all: "All",
-  t2v: "Text → Video",
-  i2v: "Image → Video",
-  t2i: "Text → Image",
+  image: "Image",
+  video: "Video",
+  audio: "Audio",
+  "3d": "3D",
+  tool: "Tools",
 };
 
+// Rows written before the category migration (see db/MIGRATION.md) still
+// carry legacy t2v/i2v/t2i values in the same column — normalize them so
+// filtering/rendering works uniformly regardless of when a row was written.
+function resolveCategory(g: Generation): Category {
+  if (g.mode === "t2i") return "image";
+  if (g.mode === "t2v" || g.mode === "i2v") return "video";
+  return g.mode as Category;
+}
+
+function resolveOutputKind(g: Generation): OutputKind {
+  const modelId = (g.params as { modelId?: string } | null)?.modelId;
+  const option = modelId ? getModelOption(modelId) : undefined;
+  if (option) return option.outputKind;
+  return resolveCategory(g) === "image" ? "image" : "video";
+}
+
 export default function GalleryGrid({ generations }: { generations: Generation[] }) {
-  const [modeFilter, setModeFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [modelFilter, setModelFilter] = useState<string>("all");
 
   const models = useMemo(
@@ -20,7 +40,7 @@ export default function GalleryGrid({ generations }: { generations: Generation[]
   );
 
   const filtered = generations.filter((g) => {
-    if (modeFilter !== "all" && g.mode !== modeFilter) return false;
+    if (categoryFilter !== "all" && resolveCategory(g) !== categoryFilter) return false;
     if (modelFilter !== "all" && g.model !== modelFilter) return false;
     return true;
   });
@@ -29,18 +49,18 @@ export default function GalleryGrid({ generations }: { generations: Generation[]
     <div className="scrollbar-thin flex h-full flex-col gap-6 overflow-y-auto px-6 py-6">
       <div className="flex flex-wrap items-center gap-3">
         <div className="glass flex rounded-full p-1">
-          {Object.keys(MODE_LABEL).map((m) => (
+          {Object.keys(CATEGORY_LABEL).map((c) => (
             <button
-              key={m}
+              key={c}
               type="button"
-              onClick={() => setModeFilter(m)}
+              onClick={() => setCategoryFilter(c)}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                modeFilter === m
+                categoryFilter === c
                   ? "btn-gradient text-accent-foreground"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              {MODE_LABEL[m]}
+              {CATEGORY_LABEL[c]}
             </button>
           ))}
         </div>
@@ -91,12 +111,7 @@ export default function GalleryGrid({ generations }: { generations: Generation[]
               className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-surface transition-transform hover:-translate-y-0.5 hover:border-border-strong"
             >
               {g.media_url ? (
-                g.mode === "t2i" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={`/api/media/${g.id}`} alt={g.prompt} className="h-full w-full object-cover" />
-                ) : (
-                  <video src={`/api/media/${g.id}`} controls className="h-full w-full object-cover" />
-                )
+                <MediaTile src={`/api/media/${g.id}`} outputKind={resolveOutputKind(g)} alt={g.prompt} />
               ) : (
                 <div className="flex h-full items-center justify-center text-xs text-muted">
                   {g.status}

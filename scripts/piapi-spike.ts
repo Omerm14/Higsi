@@ -1,5 +1,11 @@
-// Phase 0 spike: exercise PiApiProvider against real PiAPI credentials.
-// Usage: npx tsx scripts/piapi-spike.ts <image|video>
+// Live model-verification spike: exercise PiApiProvider against real PiAPI
+// credentials for any candidate model in lib/models.ts before trusting its
+// model/task_type strings. PiAPI's docs have repeatedly been stale (GPT
+// Image, old Nano Banana) — this is what catches that before it ships.
+//
+// Usage: npx tsx scripts/piapi-spike.ts <modelId> [key=value ...]
+// Example: npx tsx scripts/piapi-spike.ts flux-schnell aspectRatio=1:1
+//          npx tsx scripts/piapi-spike.ts seedance-fast prompt="a dog running" duration=5
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
@@ -14,36 +20,56 @@ if (proxyUrl) {
 }
 
 import { PiApiProvider } from "../lib/providers/piapi";
-import { MODEL_OPTIONS } from "../lib/models";
+import { getModelOption, buildPiApiInput } from "../lib/models";
 
-async function sleep(ms: number) {
+const DEFAULT_PROMPT =
+  "A minimalist dark-mode dashboard UI mockup, clean typography, blue accent";
+
+function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function main() {
-  const kind = process.argv[2] === "video" ? "video" : "image";
-  const option = MODEL_OPTIONS.find((m) =>
-    kind === "video" ? m.id === "seedance-fast" : m.id === "flux-schnell"
-  )!;
+function parseArgs(argv: string[]): { modelId: string; overrides: Record<string, string> } {
+  const [modelId, ...rest] = argv;
+  const overrides: Record<string, string> = {};
+  for (const arg of rest) {
+    const eq = arg.indexOf("=");
+    if (eq === -1) continue;
+    overrides[arg.slice(0, eq)] = arg.slice(eq + 1);
+  }
+  return { modelId: modelId ?? "flux-schnell", overrides };
+}
 
+async function main() {
+  const { modelId, overrides } = parseArgs(process.argv.slice(2));
+  const option = getModelOption(modelId);
+  if (!option) {
+    console.error(`Unknown model id: ${modelId}`);
+    console.error("Available ids: run `node -e \"require('./lib/models')\"` or check lib/models.ts");
+    process.exit(1);
+  }
+
+  const promptField = option.fields.find((f) => f.type === "prompt");
+  const values: Record<string, unknown> = { ...overrides };
+  if (promptField && !values[promptField.key]) {
+    values[promptField.key] = DEFAULT_PROMPT;
+  }
+
+  const input = buildPiApiInput(option, values);
   const provider = new PiApiProvider();
-  console.log(`Creating ${kind} task: model=${option.model} task_type=${option.taskType}`);
+  console.log(`Creating task: model=${option.model} task_type=${option.taskType}`);
+  console.log("input:", JSON.stringify(input, null, 2));
 
   const { taskId } = await provider.createTask({
     model: option.model,
     taskType: option.taskType,
-    prompt:
-      kind === "video"
-        ? "A calm ocean wave rolling onto a sandy beach at sunset, cinematic, wide shot"
-        : "A minimalist dark-mode dashboard UI mockup, clean typography, blue accent",
-    duration: option.defaults.duration,
-    aspectRatio: option.defaults.aspectRatio,
+    input,
   });
   console.log("task_id:", taskId);
 
   for (let i = 0; i < 60; i++) {
     await sleep(5000);
-    const result = await provider.getTask(taskId);
+    const result = await provider.getTask(taskId, option.outputKind);
     console.log(`[${i}] status:`, result.status);
     if (result.status === "completed") {
       console.log("output url:", result.outputUrl);
