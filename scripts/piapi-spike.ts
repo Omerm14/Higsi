@@ -2,6 +2,17 @@
 // Usage: npx tsx scripts/piapi-spike.ts <image|video>
 import { config } from "dotenv";
 config({ path: ".env.local" });
+
+// This sandbox routes all outbound HTTPS through a local proxy that Node's
+// native fetch doesn't pick up automatically (unlike curl, which reads
+// HTTPS_PROXY). Wire undici's ProxyAgent in for this standalone script only —
+// the deployed app runs outside this sandbox and doesn't need it.
+import { setGlobalDispatcher, ProxyAgent } from "undici";
+const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy;
+if (proxyUrl) {
+  setGlobalDispatcher(new ProxyAgent(proxyUrl));
+}
+
 import { PiApiProvider } from "../lib/providers/piapi";
 import { MODEL_OPTIONS } from "../lib/models";
 
@@ -12,7 +23,7 @@ async function sleep(ms: number) {
 async function main() {
   const kind = process.argv[2] === "video" ? "video" : "image";
   const option = MODEL_OPTIONS.find((m) =>
-    kind === "video" ? m.id === "seedance-fast" : m.id === "nano-banana"
+    kind === "video" ? m.id === "seedance-fast" : m.id === "flux-schnell"
   )!;
 
   const provider = new PiApiProvider();
