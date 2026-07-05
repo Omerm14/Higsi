@@ -37,6 +37,13 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
           </>
         ),
       },
+      {
+        href: "/create/audio",
+        label: "Audio",
+        icon: (
+          <path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zM21 16a3 3 0 11-6 0 3 3 0 016 0z" />
+        ),
+      },
     ],
   },
   {

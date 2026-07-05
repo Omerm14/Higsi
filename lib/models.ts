@@ -176,6 +176,36 @@ export const MODEL_OPTIONS: ModelOption[] = [
     ],
   },
   {
+    // Verified via live spike (2026-07-05): a real 10s .mp3 completed in
+    // ~24s. $0.0005/sec per PiAPI's docs — extremely cheap.
+    id: "ace-step",
+    label: "Ace Step (music)",
+    category: "audio",
+    model: "Qubico/ace-step",
+    taskType: "txt2audio",
+    costUnit: "per_second",
+    rateUsd: 0.0005,
+    tier: "cheap",
+    outputKind: "audio",
+    fields: [
+      {
+        key: "prompt",
+        wireKey: "style_prompt",
+        type: "prompt",
+        label: "Style",
+        required: true,
+      },
+      {
+        key: "lyrics",
+        wireKey: "lyrics",
+        type: "text",
+        label: "Lyrics",
+        default: "[inst]",
+      },
+      { ...DURATION_FIELD, default: 10, max: 240 },
+    ],
+  },
+  {
     id: "nano-banana",
     label: "Nano Banana 2 (cheap image)",
     category: "image",

@@ -251,7 +251,7 @@ export default function Studio({
                 {field.label}
                 <input
                   type="text"
-                  value={String(values[field.key] ?? "")}
+                  value={String(values[field.key] ?? field.default ?? "")}
                   onChange={(e) => setValue(field.key, e.target.value)}
                   className="w-32 bg-transparent text-foreground outline-none"
                 />
@@ -320,7 +320,11 @@ export default function Studio({
             <textarea
               value={String(values[promptField.key] ?? "")}
               onChange={(e) => setValue(promptField.key, e.target.value)}
-              placeholder="Describe what you want to generate…"
+              placeholder={
+                promptField.label === "Prompt"
+                  ? "Describe what you want to generate…"
+                  : `${promptField.label}…`
+              }
               rows={1}
               className="max-h-40 flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none placeholder:text-muted-2"
             />
