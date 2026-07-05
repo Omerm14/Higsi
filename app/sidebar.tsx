@@ -54,6 +54,51 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
+    label: "Tools",
+    items: [
+      {
+        href: "/tools/upscale",
+        label: "Upscale",
+        icon: (
+          <path d="M4 14v6h6M20 10V4h-6M20 4l-7 7M4 20l7-7" strokeLinejoin="round" />
+        ),
+      },
+      {
+        href: "/tools/background-removal",
+        label: "Cutout",
+        icon: (
+          <path
+            d="M6 3a3 3 0 100 6 3 3 0 000-6zM6 15a3 3 0 100 6 3 3 0 000-6zM6 9v6M20 5L8.5 16.5M15 15l5 5M15 20l5-5"
+            strokeLinejoin="round"
+          />
+        ),
+      },
+      {
+        href: "/tools/outpaint",
+        label: "Outpaint",
+        icon: (
+          <>
+            <rect x="7" y="7" width="10" height="10" rx="1" />
+            <path
+              d="M3 3v4M3 3h4M21 3v4M21 3h-4M3 21v-4M3 21h4M21 21v-4M21 21h-4"
+              strokeLinecap="round"
+            />
+          </>
+        ),
+      },
+      {
+        href: "/tools/faceswap",
+        label: "Faceswap",
+        icon: (
+          <>
+            <circle cx="8" cy="10" r="4" />
+            <circle cx="16" cy="14" r="4" />
+          </>
+        ),
+      },
+    ],
+  },
+  {
     label: "",
     items: [
       {

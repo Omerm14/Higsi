@@ -40,6 +40,7 @@ export interface ModelField {
   step?: number;
   accept?: string; // for "image" fields, e.g. "image/*"
   arrayWrap?: boolean; // wrap the single value in a 1-element array on the wire (e.g. Seedance's image_urls)
+  numeric?: boolean; // coerce a "select" field's string option value to a number on the wire (e.g. upscale's scale)
 }
 
 export interface ModelOption {
@@ -54,6 +55,10 @@ export interface ModelOption {
   tier: "cheap" | "mid" | "full";
   fields: ModelField[];
   outputKind: "image" | "video" | "audio" | "3d";
+  // Escape hatch for models whose wire format doesn't fit a flat key
+  // mapping (e.g. Flux's outpaint needs its four directional paddings
+  // nested under input.custom_settings). Runs after the flat field mapping.
+  transformInput?: (input: Record<string, unknown>) => Record<string, unknown>;
 }
 
 const ASPECT_RATIO_FIELD: ModelField = {
@@ -176,6 +181,194 @@ export const MODEL_OPTIONS: ModelOption[] = [
     ],
   },
   {
+    // Verified via live spike (2026-07-05): a real completed upscale in
+    // ~11s. Pricing is actually $0.001/megapixel of output (2x on a 512x512
+    // source = 1MP = $0.001 minimum charge) — rateUsd here is a flat
+    // approximation for typical use, not exact for every input size.
+    id: "upscale",
+    label: "Upscale",
+    category: "tool",
+    toolKind: "upscale",
+    model: "Qubico/image-toolkit",
+    taskType: "upscale",
+    costUnit: "per_output",
+    rateUsd: 0.005,
+    tier: "cheap",
+    outputKind: "image",
+    fields: [
+      {
+        key: "image",
+        wireKey: "image",
+        type: "image",
+        label: "Image to upscale",
+        role: "source",
+        required: true,
+      },
+      {
+        key: "scale",
+        wireKey: "scale",
+        type: "select",
+        label: "Scale",
+        default: "2",
+        numeric: true,
+        options: [
+          { value: "2", label: "2x" },
+          { value: "4", label: "4x" },
+        ],
+      },
+    ],
+  },
+  {
+    // Verified via live spike (2026-07-05): a real completed background
+    // removal in ~9s. $0.001/generation per PiAPI's docs.
+    id: "background-removal",
+    label: "Background removal",
+    category: "tool",
+    toolKind: "background-removal",
+    model: "Qubico/image-toolkit",
+    taskType: "background-remove",
+    costUnit: "per_output",
+    rateUsd: 0.001,
+    tier: "cheap",
+    outputKind: "image",
+    fields: [
+      {
+        key: "image",
+        wireKey: "image",
+        type: "image",
+        label: "Image",
+        role: "source",
+        required: true,
+      },
+    ],
+  },
+  {
+    // Verified via live spike (2026-07-05): a real completed outpaint in
+    // ~38s (extended 128px left/right on a 512x512 source). No pricing page
+    // found for this specific task_type — rateUsd approximated from
+    // flux-dev's $0.20 (same underlying Flux Dev model family, same
+    // 200000-point frozen amount we observed for flux-dev-per-image runs).
+    id: "outpaint",
+    label: "Outpaint",
+    category: "tool",
+    toolKind: "outpaint",
+    model: "Qubico/flux1-dev-advanced",
+    taskType: "fill-outpaint",
+    costUnit: "per_output",
+    rateUsd: 0.2,
+    tier: "mid",
+    outputKind: "image",
+    fields: [
+      {
+        key: "prompt",
+        wireKey: "prompt",
+        type: "prompt",
+        label: "Describe the extended area",
+      },
+      {
+        key: "image",
+        wireKey: "image",
+        type: "image",
+        label: "Image",
+        role: "source",
+        required: true,
+      },
+      {
+        key: "outpaintLeft",
+        wireKey: "outpaint_left",
+        type: "number",
+        label: "Left",
+        default: 0,
+        min: 0,
+        max: 1024,
+      },
+      {
+        key: "outpaintRight",
+        wireKey: "outpaint_right",
+        type: "number",
+        label: "Right",
+        default: 256,
+        min: 0,
+        max: 1024,
+      },
+      {
+        key: "outpaintTop",
+        wireKey: "outpaint_top",
+        type: "number",
+        label: "Top",
+        default: 0,
+        min: 0,
+        max: 1024,
+      },
+      {
+        key: "outpaintBottom",
+        wireKey: "outpaint_bottom",
+        type: "number",
+        label: "Bottom",
+        default: 0,
+        min: 0,
+        max: 1024,
+      },
+    ],
+    transformInput: (input) => {
+      const {
+        outpaint_left,
+        outpaint_right,
+        outpaint_top,
+        outpaint_bottom,
+        ...rest
+      } = input;
+      return {
+        ...rest,
+        custom_settings: [
+          {
+            setting_type: "outpaint",
+            outpaint_left: outpaint_left ?? 0,
+            outpaint_right: outpaint_right ?? 0,
+            outpaint_top: outpaint_top ?? 0,
+            outpaint_bottom: outpaint_bottom ?? 0,
+          },
+        ],
+      };
+    },
+  },
+  {
+    // Verified via live spike (2026-07-05): a real completed faceswap in
+    // ~9s (using two real face photos — a first attempt with generic stock
+    // photos failed with a generic "invalid request", which turned out to
+    // be "no face detected" rather than a field-mapping problem; PiAPI
+    // restores frozen points on that kind of failure, no charge).
+    // $0.01/generation per PiAPI's docs.
+    id: "faceswap",
+    label: "Faceswap",
+    category: "tool",
+    toolKind: "faceswap",
+    model: "Qubico/image-toolkit",
+    taskType: "face-swap",
+    costUnit: "per_output",
+    rateUsd: 0.01,
+    tier: "cheap",
+    outputKind: "image",
+    fields: [
+      {
+        key: "swapImage",
+        wireKey: "swap_image",
+        type: "image",
+        label: "Face to use",
+        role: "source",
+        required: true,
+      },
+      {
+        key: "targetImage",
+        wireKey: "target_image",
+        type: "image",
+        label: "Photo to swap into",
+        role: "target",
+        required: true,
+      },
+    ],
+  },
+  {
     // Verified via live spike (2026-07-05): request accepted cleanly with a
     // real image URL, frozen points assigned. $0.10/generation per PiAPI's
     // docs. Note: PiAPI's echoed input moves our "image" value into an
@@ -293,9 +486,10 @@ export function buildPiApiInput(
 ): Record<string, unknown> {
   const input: Record<string, unknown> = {};
   for (const field of option.fields) {
-    const value = values[field.key] ?? field.default;
+    let value = values[field.key] ?? field.default;
     if (value === undefined || value === null || value === "") continue;
+    if (field.numeric) value = Number(value);
     input[field.wireKey] = field.arrayWrap ? [value] : value;
   }
-  return input;
+  return option.transformInput ? option.transformInput(input) : input;
 }
