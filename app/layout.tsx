@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Sidebar from "./sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Higsi",
-  description: "Personal image/video generation tool",
+  description: "Personal image/video generation studio",
 };
 
 export default function RootLayout({
@@ -28,21 +28,11 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
-        <header className="border-b border-border">
-          <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-4">
-            <span className="font-semibold tracking-tight">Higsi</span>
-            <nav className="flex gap-4 text-sm text-muted">
-              <Link href="/" className="hover:text-foreground">
-                Generate
-              </Link>
-              <Link href="/gallery" className="hover:text-foreground">
-                Gallery
-              </Link>
-            </nav>
-          </div>
-        </header>
-        <main className="flex flex-1 flex-col">{children}</main>
+      <body className="bg-app-glow flex h-screen overflow-hidden text-foreground">
+        <Sidebar />
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          {children}
+        </main>
       </body>
     </html>
   );
