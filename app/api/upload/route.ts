@@ -9,8 +9,16 @@ export async function POST(req: Request) {
   }
 
   const blob = await put(`references/${Date.now()}-${file.name}`, file, {
-    access: "public",
+    access: "private",
   });
 
-  return NextResponse.json({ url: blob.url });
+  // PiAPI fetches this URL directly from its own servers, so it needs a
+  // real internet-reachable URL rather than an app-authenticated one —
+  // /api/references proxies the private blob back out unauthenticated.
+  const url = new URL(
+    `/api/references/${blob.pathname.replace(/^references\//, "")}`,
+    req.url
+  ).toString();
+
+  return NextResponse.json({ url });
 }

@@ -93,9 +93,9 @@ export default function GalleryGrid({ generations }: { generations: Generation[]
               {g.media_url ? (
                 g.mode === "t2i" ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={g.media_url} alt={g.prompt} className="h-full w-full object-cover" />
+                  <img src={`/api/media/${g.id}`} alt={g.prompt} className="h-full w-full object-cover" />
                 ) : (
-                  <video src={g.media_url} controls className="h-full w-full object-cover" />
+                  <video src={`/api/media/${g.id}`} controls className="h-full w-full object-cover" />
                 )
               ) : (
                 <div className="flex h-full items-center justify-center text-xs text-muted">
@@ -113,7 +113,7 @@ export default function GalleryGrid({ generations }: { generations: Generation[]
                 </div>
                 {g.media_url && (
                   <a
-                    href={g.media_url}
+                    href={`/api/media/${g.id}`}
                     download
                     className="pointer-events-auto mt-2 self-start rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-white backdrop-blur hover:bg-white/20"
                   >

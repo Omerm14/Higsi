@@ -222,9 +222,9 @@ export default function GenerateForm() {
                 {job.media_url ? (
                   job.mode === "t2i" ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={job.media_url} alt={job.prompt} className="h-full w-full object-cover" />
+                    <img src={`/api/media/${job.id}`} alt={job.prompt} className="h-full w-full object-cover" />
                   ) : (
-                    <video src={job.media_url} controls className="h-full w-full object-cover" />
+                    <video src={`/api/media/${job.id}`} controls className="h-full w-full object-cover" />
                   )
                 ) : (
                   <div className="flex h-full flex-col items-center justify-center gap-2 text-xs text-muted">
