@@ -1,5 +1,5 @@
-import GenerateForm from "./generate-form";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return <GenerateForm />;
+  redirect("/create/image");
 }

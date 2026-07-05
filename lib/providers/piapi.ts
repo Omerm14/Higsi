@@ -57,12 +57,7 @@ export class PiApiProvider implements Provider {
     const body = {
       model: input.model,
       task_type: input.taskType,
-      input: {
-        prompt: input.prompt,
-        ...(input.duration ? { duration: input.duration } : {}),
-        ...(input.aspectRatio ? { aspect_ratio: input.aspectRatio } : {}),
-        ...(input.imageUrl ? { image_url: input.imageUrl } : {}),
-      },
+      input: input.input,
       config: {
         service_mode: "public",
       },

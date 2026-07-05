@@ -1,10 +1,9 @@
 export interface CreateTaskInput {
   model: string;
   taskType: string;
-  prompt: string;
-  duration?: number;
-  aspectRatio?: string;
-  imageUrl?: string;
+  // Passed through verbatim as PiAPI's `input` bag — callers build this via
+  // lib/models.ts's buildPiApiInput() from a ModelOption's field schema.
+  input: Record<string, unknown>;
 }
 
 export interface CreateTaskResult {

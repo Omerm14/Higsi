@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import type { Mode } from "./models";
+import type { Category } from "./models";
 import type { TaskStatus } from "./providers/types";
 
 function sql() {
@@ -12,7 +12,10 @@ export interface Generation {
   id: string;
   model: string;
   task_type: string;
-  mode: Mode;
+  // Underlying SQL column is still named "mode" pending the migration in
+  // db/schema.sql (see MIGRATION.md). New rows store Category values; rows
+  // written before the migration may still carry legacy t2v/i2v/t2i values.
+  mode: Category | "t2v" | "i2v" | "t2i";
   prompt: string;
   params: Record<string, unknown>;
   status: TaskStatus;
@@ -28,7 +31,7 @@ export interface Generation {
 export async function insertGeneration(input: {
   model: string;
   taskType: string;
-  mode: Mode;
+  category: Category;
   prompt: string;
   params: Record<string, unknown>;
   piapiTaskId: string;
@@ -39,7 +42,7 @@ export async function insertGeneration(input: {
     insert into generations
       (model, task_type, mode, prompt, params, piapi_task_id, est_cost_usd, status)
     values
-      (${input.model}, ${input.taskType}, ${input.mode}, ${input.prompt},
+      (${input.model}, ${input.taskType}, ${input.category}, ${input.prompt},
        ${JSON.stringify(input.params)}, ${input.piapiTaskId}, ${input.estCostUsd}, 'pending')
     returning *
   `) as Generation[];
