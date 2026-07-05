@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
-import Sidebar from "./sidebar";
+import { BRAND } from "@/lib/brand";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Higsi",
-  description: "Personal image/video generation studio",
+  title: BRAND.name,
+  description: BRAND.description,
 };
 
 export default function RootLayout({
@@ -24,16 +25,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    <ClerkProvider
+      appearance={{
+        variables: {
+          colorPrimary: "#a855f7",
+          colorBackground: "#111114",
+          colorForeground: "#f4f4f5",
+          colorInput: "#1a1a1f",
+          colorInputForeground: "#f4f4f5",
+        },
+      }}
     >
-      <body className="bg-app-glow flex h-screen overflow-hidden text-foreground">
-        <Sidebar />
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          {children}
-        </main>
-      </body>
-    </html>
+      <html
+        lang="en"
+        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      >
+        <body className="bg-app-glow text-foreground">{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }

@@ -101,6 +101,54 @@ body {
   transform: scale(0.98);
 }
 
+/* Skeleton shimmer for generating tiles */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(168, 85, 247, 0.08) 45%,
+    rgba(236, 72, 153, 0.1) 55%,
+    transparent 80%
+  );
+  animation: shimmer-sweep 1.8s ease-in-out infinite;
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Blur-up + scale-in reveal for a finished generation */
+.reveal {
+  animation: reveal-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
   height: 6px;

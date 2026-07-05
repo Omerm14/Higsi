@@ -39,9 +39,10 @@ export async function persistOutputToBlob(
   }
   const contentType = res.headers.get("content-type") ?? "application/octet-stream";
   const ext = extensionFor(contentType);
-  const buffer = await res.arrayBuffer();
 
-  const blob = await put(`generations/${generationId}.${ext}`, Buffer.from(buffer), {
+  // Stream straight through to Blob instead of buffering — long videos
+  // would otherwise sit fully in function memory.
+  const blob = await put(`generations/${generationId}.${ext}`, res.body ?? "", {
     access: "private",
     contentType,
   });
