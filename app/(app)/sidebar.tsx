@@ -24,6 +24,18 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
           <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1v-9.5z" strokeLinejoin="round" />
         ),
       },
+      {
+        href: "/create",
+        label: "Create",
+        icon: (
+          // Magic wand — the guided Eve flow
+          <path
+            d="M15 4V2M15 10V8M11 6h2M17 6h2M6 21l10.5-10.5a1.5 1.5 0 00-2.12-2.12L3.88 18.88 6 21zM19 15v2M18 16h2M9 3v2M8 4h2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        ),
+      },
     ],
   },
   {
