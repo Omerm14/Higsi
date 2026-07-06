@@ -48,10 +48,18 @@ export interface ModelOption {
   label: string;
   category: Category;
   toolKind?: ToolKind;
+  // For piapi: model + taskType map to PiAPI's unified task body. For fal:
+  // model is the full Fal model path (e.g. "fal-ai/flux/schnell") and
+  // taskType is unused (""). Explicit on every entry — this field routes
+  // real money.
+  provider: "piapi" | "fal";
   model: string;
   taskType: string;
   costUnit: CostUnit;
   rateUsd: number;
+  // Customer price = rateUsd * priceMultiplier (default 2 — see
+  // lib/pricing.ts). Override per model if a specific margin is needed.
+  priceMultiplier?: number;
   tier: "cheap" | "mid" | "full";
   fields: ModelField[];
   outputKind: "image" | "video" | "audio" | "3d";
@@ -118,6 +126,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_second",
     rateUsd: 0.1,
     tier: "cheap",
+    provider: "piapi",
     outputKind: "video",
     fields: [PROMPT_FIELD, ASPECT_RATIO_FIELD, DURATION_FIELD],
   },
@@ -130,6 +139,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_second",
     rateUsd: 0.5,
     tier: "full",
+    provider: "piapi",
     outputKind: "video",
     fields: [PROMPT_FIELD, ASPECT_RATIO_FIELD, DURATION_FIELD],
   },
@@ -142,6 +152,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_second",
     rateUsd: 0.1,
     tier: "cheap",
+    provider: "piapi",
     outputKind: "video",
     fields: [PROMPT_FIELD, ASPECT_RATIO_FIELD, DURATION_FIELD, SEEDANCE_IMAGE_FIELD],
   },
@@ -154,6 +165,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_second",
     rateUsd: 0.5,
     tier: "full",
+    provider: "piapi",
     outputKind: "video",
     fields: [PROMPT_FIELD, ASPECT_RATIO_FIELD, DURATION_FIELD, SEEDANCE_IMAGE_FIELD],
   },
@@ -169,6 +181,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_output",
     rateUsd: 0.28,
     tier: "cheap",
+    provider: "piapi",
     outputKind: "video",
     fields: [
       PROMPT_FIELD,
@@ -194,6 +207,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_output",
     rateUsd: 0.005,
     tier: "cheap",
+    provider: "piapi",
     outputKind: "image",
     fields: [
       {
@@ -230,6 +244,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_output",
     rateUsd: 0.001,
     tier: "cheap",
+    provider: "piapi",
     outputKind: "image",
     fields: [
       {
@@ -257,6 +272,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_output",
     rateUsd: 0.2,
     tier: "mid",
+    provider: "piapi",
     outputKind: "image",
     fields: [
       {
@@ -348,6 +364,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_output",
     rateUsd: 0.01,
     tier: "cheap",
+    provider: "piapi",
     outputKind: "image",
     fields: [
       {
@@ -382,6 +399,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_output",
     rateUsd: 0.1,
     tier: "cheap",
+    provider: "piapi",
     outputKind: "3d",
     fields: [
       {
@@ -405,6 +423,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_second",
     rateUsd: 0.0005,
     tier: "cheap",
+    provider: "piapi",
     outputKind: "audio",
     fields: [
       {
@@ -433,6 +452,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_image",
     rateUsd: 0.06,
     tier: "mid",
+    provider: "piapi",
     outputKind: "image",
     fields: [PROMPT_FIELD, { ...ASPECT_RATIO_FIELD, default: "1:1" }],
   },
@@ -445,6 +465,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     costUnit: "per_image",
     rateUsd: 0.02,
     tier: "cheap",
+    provider: "piapi",
     outputKind: "image",
     fields: [PROMPT_FIELD, { ...ASPECT_RATIO_FIELD, default: "1:1" }],
   },
@@ -458,6 +479,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     // Verified to cost ~10x flux-schnell's frozen points on PiAPI.
     rateUsd: 0.2,
     tier: "full",
+    provider: "piapi",
     outputKind: "image",
     fields: [PROMPT_FIELD, { ...ASPECT_RATIO_FIELD, default: "1:1" }],
   },
@@ -478,9 +500,9 @@ export function estimateCostUsd(
 }
 
 // Maps a filled-in values bag (keyed by ModelField.key) to the `input` object
-// PiAPI expects (keyed by ModelField.wireKey), applying each field's default
-// when the value is missing and skipping absent optional fields.
-export function buildPiApiInput(
+// the provider expects (keyed by ModelField.wireKey), applying each field's
+// default when the value is missing and skipping absent optional fields.
+export function buildProviderInput(
   option: ModelOption,
   values: Record<string, unknown>
 ): Record<string, unknown> {

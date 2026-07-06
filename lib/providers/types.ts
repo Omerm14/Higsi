@@ -1,8 +1,9 @@
 export interface CreateTaskInput {
   model: string;
   taskType: string;
-  // Passed through verbatim as PiAPI's `input` bag — callers build this via
-  // lib/models.ts's buildPiApiInput() from a ModelOption's field schema.
+  // Passed through verbatim as the provider's `input` bag — callers build
+  // this via lib/models.ts's buildProviderInput() from a ModelOption's
+  // field schema.
   input: Record<string, unknown>;
 }
 
