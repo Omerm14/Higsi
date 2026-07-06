@@ -4,6 +4,11 @@ import { PRESETS } from "@/lib/presets";
 import { CREDIT_PACKS, SIGNUP_BONUS_CREDITS, formatCredits } from "@/lib/pricing";
 
 const CAPABILITIES = [
+  {
+    emoji: "🪄",
+    title: "Eve writes your prompts",
+    blurb: "Answer three plain questions — your AI creative director does the technical part",
+  },
   { emoji: "🖼️", title: "Images", blurb: "Product shots, social visuals, thumbnails" },
   { emoji: "🎬", title: "Video", blurb: "UGC-style clips, ads, b-roll — text or image to video" },
   { emoji: "🎵", title: "Audio", blurb: "Jingles and background tracks from a prompt" },

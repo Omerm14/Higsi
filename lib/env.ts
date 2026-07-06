@@ -19,6 +19,8 @@ const RECOMMENDED = [
   "NEXT_PUBLIC_APP_URL",
   "CRON_SECRET",
   "ADMIN_CLERK_USER_ID",
+  // Powers Eve's LLM prompt-writing; without it Eve falls back to templates.
+  "ANTHROPIC_API_KEY",
 ] as const;
 
 export function assertEnv(): void {

@@ -55,7 +55,19 @@ auto-refund — acceptable while testing, not for paying customers.
 Once you upgrade to **Vercel Pro**, change the schedule in `vercel.json` to
 `* * * * *` (every minute) and redeploy.
 
-## 5. Fal.ai (optional cost reduction, later)
+## 5. Eve — the AI prompt agent (5 minutes, high impact)
+
+Eve turns customers' plain-language briefs into expert generation prompts.
+She works without setup (hand-written templates), but with an Anthropic API
+key she writes genuinely tailored prompts with Claude Haiku (~$0.001 per
+brief — negligible):
+
+1. Create an API key at https://console.anthropic.com/settings/keys.
+2. Add `ANTHROPIC_API_KEY` to Vercel env vars and redeploy.
+3. Test: `/create` → pick a goal → answer the questions → Eve's note should
+   feel specific to your brief (templated fallback notes are generic).
+
+## 6. Fal.ai (optional cost reduction, later)
 
 The Fal provider is wired in code but **no Fal model is enabled** — every
 model must be live-spike-verified first (provider docs lie; that convention
@@ -70,7 +82,7 @@ If it completes with a real output URL, add a `ModelOption` with
 set its true `rateUsd` from Fal's pricing page, and compare cost/quality
 against the PiAPI equivalent before switching defaults.
 
-## 6. Launch smoke test (10 minutes)
+## 7. Launch smoke test (10 minutes)
 
 1. Fresh browser / second Google account → sign up → dashboard shows the
    500-credit welcome.
@@ -86,7 +98,7 @@ against the PiAPI equivalent before switching defaults.
 6. `/admin` shows users, margins, and recent generations (only for your
    account; anyone else gets a 404).
 
-## 7. Naming
+## 8. Naming
 
 The product name lives in one place: `lib/brand.ts`. Change `name`,
 `tagline`, `description`, and `logoLetter` when you settle on the final

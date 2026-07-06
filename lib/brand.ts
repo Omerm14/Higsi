@@ -5,7 +5,8 @@ export const BRAND = {
   name: "Higsi",
   tagline: "AI content studio for UGC creators",
   description:
-    "Generate scroll-stopping images, videos, audio and 3D for your clients — pay only for what you create.",
+    "Describe it in plain words — Eve, your AI creative director, turns it into scroll-stopping content for your clients. Pay only for what you create.",
+  agentName: "Eve",
   // Single letter used in the logo mark until a real logo exists.
   logoLetter: "H",
 } as const;

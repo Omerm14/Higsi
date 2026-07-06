@@ -32,9 +32,15 @@ export default async function DashboardPage() {
               </span>
             </h1>
             <p className="mt-2 text-sm text-muted">
-              That&apos;s enough to try images, video, and audio. Pick a recipe below and make your
-              first piece — it takes under a minute.
+              That&apos;s enough to try images, video, and audio. Tell Eve what you&apos;re making —
+              your first piece takes under a minute.
             </p>
+            <Link
+              href="/create"
+              className="btn-gradient mt-5 inline-block rounded-full px-7 py-3 text-sm font-semibold text-accent-foreground transition-transform hover:scale-105"
+            >
+              ✨ Create with Eve
+            </Link>
           </div>
         ) : (
           <div>
@@ -44,6 +50,12 @@ export default async function DashboardPage() {
             <p className="mt-1 text-sm text-muted">
               {formatCredits(user.balance_credits)} credits ready to burn. What are we making today?
             </p>
+            <Link
+              href="/create"
+              className="btn-gradient mt-4 inline-block rounded-full px-6 py-2.5 text-sm font-semibold text-accent-foreground transition-transform hover:scale-105"
+            >
+              ✨ Create with Eve
+            </Link>
           </div>
         )}
 
