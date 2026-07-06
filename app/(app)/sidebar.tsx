@@ -142,8 +142,22 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   },
 ];
 
-export default function Sidebar() {
+const ADMIN_ITEM: NavItem = {
+  href: "/admin",
+  label: "Admin",
+  icon: (
+    <>
+      <path d="M12 2l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5l8-3z" strokeLinejoin="round" />
+      <path d="M9 12l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
+    </>
+  ),
+};
+
+export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const groups = isAdmin
+    ? [...NAV_GROUPS, { label: "", items: [ADMIN_ITEM] }]
+    : NAV_GROUPS;
 
   return (
     <aside className="flex w-[76px] shrink-0 flex-col items-center gap-5 border-r border-border py-6">
@@ -154,7 +168,7 @@ export default function Sidebar() {
         {BRAND.logoLetter}
       </Link>
 
-      {NAV_GROUPS.map((group, i) => (
+      {groups.map((group, i) => (
         <nav key={group.label || i} className="flex flex-col items-center gap-2">
           {group.items.map((item) => {
             const active = pathname === item.href;
