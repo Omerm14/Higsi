@@ -47,9 +47,13 @@ Already set from before: `PIAPI_KEY`, `POSTGRES_URL`, `BLOB_READ_WRITE_TOKEN`.
 
 ## 4. Vercel plan
 
-The reconciler cron (`vercel.json`, every minute) needs **Vercel Pro**. On
-Hobby it silently degrades to ~once a day, which means stuck jobs can take a
-day to auto-refund. Pro is the right call for a paid product.
+The reconciler cron in `vercel.json` ships as **daily** (`0 3 * * *`)
+because Vercel **rejects the whole deployment** if a Hobby project declares
+a more frequent schedule. Daily means a stuck job can take up to a day to
+auto-refund — acceptable while testing, not for paying customers.
+
+Once you upgrade to **Vercel Pro**, change the schedule in `vercel.json` to
+`* * * * *` (every minute) and redeploy.
 
 ## 5. Fal.ai (optional cost reduction, later)
 
